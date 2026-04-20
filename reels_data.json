@@ -1,0 +1,12 @@
+[
+  { "id": "r1", "userId": "u49", "url": "https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-landscape-city-with-neon-lights-40150-large.mp4", "caption": "The matrix is waking up. #NeuralArt", "likes": 55000, "shares": 12000 },
+  { "id": "r2", "userId": "u27", "url": "https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-neon-lights-at-night-40150-large.mp4", "caption": "Painting with light and logic.", "likes": 22000, "shares": 4500 },
+  { "id": "r3", "userId": "u1", "url": "https://assets.mixkit.co/videos/preview/mixkit-man-working-out-in-the-gym-4762-large.mp4", "caption": "Pushing the limits every single day.", "likes": 150000, "shares": 80000 },
+  { "id": "r4", "userId": "u3", "url": "https://assets.mixkit.co/videos/preview/mixkit-footballer-preparing-a-free-kick-on-the-pitch-4835-large.mp4", "caption": "Aim for perfection. #SIUUU", "likes": 950000, "shares": 120000 },
+  { "id": "r5", "userId": "u5", "url": "https://assets.mixkit.co/videos/preview/mixkit-hands-of-a-man-playing-the-piano-4613-large.mp4", "caption": "Art is everywhere.", "likes": 120000, "shares": 15000 },
+  { "id": "r6", "userId": "u7", "url": "https://assets.mixkit.co/videos/preview/mixkit-camera-looking-up-at-a-glittery-night-sky-40019-large.mp4", "caption": "Beyond the simulation.", "likes": 88000, "shares": 9000 },
+  { "id": "r7", "userId": "u14", "url": "https://assets.mixkit.co/videos/preview/mixkit-young-woman-with-her-hair-in-the-wind-3013-large.mp4", "caption": "Wildest dreams come true.", "likes": 650000, "shares": 140000 },
+  { "id": "r8", "userId": "u25", "url": "https://assets.mixkit.co/videos/preview/mixkit-woman-sitting-on-a-beach-at-sunset-1200-large.mp4", "caption": "Ocean eyes in the matrix.", "likes": 420000, "shares": 56000 },
+  { "id": "r9", "userId": "u2", "url": "https://assets.mixkit.co/videos/preview/mixkit-stars-in-the-night-sky-slow-movement-40011-large.mp4", "caption": "Starship update... to the moon!", "likes": 310000, "shares": 89000 },
+  { "id": "r10", "userId": "u43", "url": "https://assets.mixkit.co/videos/preview/mixkit-view-of-a-rocket-launching-into-space-114-large.mp4", "caption": "The future of space travel.", "likes": 120000, "shares": 45000 }
+]
