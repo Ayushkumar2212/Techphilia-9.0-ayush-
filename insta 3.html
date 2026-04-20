@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Insta-AI | Ultra Pro Social</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            --ai-blue: #3b82f6;
+            --ai-purple: #a855f7;
+            --glass: rgba(10, 10, 10, 0.85);
+        }
+
+        * { cursor: default; user-select: none; -webkit-tap-highlight-color: transparent; outline: none; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; color: #fff; overflow: hidden; }
+
+        /* Smooth Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); } 50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.4); } }
+        .pulse-glow { animation: pulseGlow 2s infinite; }
+
+        .glass-sidebar { background: var(--glass); backdrop-filter: blur(40px); border-right: 1px solid rgba(255, 255, 255, 0.05); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        
+        .active-nav { background: rgba(255, 255, 255, 0.08); font-weight: 800; border-left: 4px solid var(--ai-blue); }
+        .nav-btn { transition: all 0.2s; }
+        .nav-btn:hover:not(.active-nav) { background: rgba(255, 255, 255, 0.04); }
+
+        /* Interactive Elements */
+        .story-ring { background: var(--primary); padding: 2.5px; border-radius: 50%; transition: all 0.3s; }
+        .story-ring.viewed { background: #333; }
+        .story-ring:active { transform: scale(0.9); }
+
+        .btn-premium { background: var(--ai-blue); transition: all 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); }
+        .btn-premium:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5); }
+        .btn-premium:active { transform: scale(0.95); }
+
+        /* Reels Player */
+        .reels-container { scroll-snap-type: y mandatory; overflow-y: scroll; height: 100vh; }
+        .reel-unit { scroll-snap-align: start; height: 100vh; position: relative; background: #000; }
+
+        /* Story Progress */
+        .prog-bar { height: 2px; background: rgba(255,255,255,0.3); flex: 1; border-radius: 10px; overflow: hidden; }
+        .prog-fill { height: 100%; background: #fff; width: 0%; }
+        .animate-prog { animation: fillProg 5s linear forwards; }
+        @keyframes fillProg { to { width: 100%; } }
+
+        /* Custom Scroll */
+        .custom-scroll::-webkit-scrollbar { width: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <nav class="w-20 md:w-72 glass-sidebar flex flex-col p-8 z-[100]">
+        <div class="mb-14">
+            <h1 class="text-3xl font-black italic bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-pink-500 tracking-tighter">Insta-AI</h1>
+        </div>
+
+        <div class="flex-1 space-y-3" id="nav-list">
+            <button onclick="nav('home')" id="nav-home" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl active-nav group">
+                <i data-lucide="home" class="group-hover:scale-110"></i>
+                <span class="hidden md:block">Home Feed</span>
+            </button>
+            <button onclick="nav('explore')" id="nav-explore" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group">
+                <i data-lucide="compass" class="group-hover:scale-110"></i>
+                <span class="hidden md:block">Explore</span>
+            </button>
+            <button onclick="nav('reels')" id="nav-reels" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group">
+                <i data-lucide="clapperboard" class="group-hover:scale-110 text-pink-500"></i>
+                <span class="hidden md:block">Reels</span>
+            </button>
+            <button onclick="nav('dm')" id="nav-dm" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group">
+                <i data-lucide="send" class="group-hover:scale-110 text-blue-400"></i>
+                <span class="hidden md:block">Messages</span>
+            </button>
+            <button onclick="openCreate()" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group">
+                <i data-lucide="plus-square" class="group-hover:scale-110 text-orange-400"></i>
+                <span class="hidden md:block">Create</span>
+            </button>
+            <button onclick="nav('profile')" id="nav-profile" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group">
+                <img id="myAvatar-sm" src="https://api.dicebear.com/7.x/bottts/svg?seed=Ayush" class="w-7 h-7 rounded-full border border-white/20">
+                <span class="hidden md:block">Profile</span>
+            </button>
+        </div>
+
+        <div class="pt-10 border-t border-white/5 mt-auto">
+            <button onclick="openSettings()" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group text-gray-400 mb-2">
+                <i data-lucide="settings" class="group-hover:rotate-45 transition-transform"></i>
+                <span class="hidden md:block">Settings</span>
+            </button>
+            <button onclick="logout()" class="nav-btn flex items-center gap-5 w-full p-4 rounded-2xl group text-red-500 hover:bg-red-500/10">
+                <i data-lucide="log-out"></i>
+                <span class="hidden md:block">Disconnect</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN VIEWPORT -->
+    <main class="flex-1 bg-[#050505] overflow-y-auto no-scrollbar relative">
+        
+        <!-- HOME MODULE -->
+        <div id="home" class="page max-w-xl mx-auto py-10 fade-in">
+            <!-- Story Arc -->
+            <div class="flex gap-4 overflow-x-auto no-scrollbar mb-12 px-2 bg-gradient-to-b from-white/5 to-transparent p-6 rounded-[3rem] border border-white/5">
+                <div class="flex-shrink-0 text-center group cursor-pointer" onclick="triggerUp('story')">
+                    <div class="w-18 h-18 rounded-full border-2 border-dashed border-gray-600 flex items-center justify-center p-1 group-hover:border-blue-500 transition-colors">
+                        <div class="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center"><i data-lucide="plus" class="group-hover:scale-125 transition-transform"></i></div>
+                    </div>
+                    <span class="text-[10px] text-gray-500 font-black mt-2 block uppercase tracking-widest">Post Story</span>
+                </div>
+                <div id="homeStories" class="flex gap-5"></div>
+            </div>
+
+            <!-- Feed Stream -->
+            <div id="feedStream" class="space-y-16 px-2 pb-32"></div>
+        </div>
+
+        <!-- EXPLORE MODULE -->
+        <div id="explore" class="page hidden max-w-5xl mx-auto p-12 fade-in">
+            <div class="relative mb-16 group">
+                <i data-lucide="search" class="absolute left-8 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors"></i>
+                <input type="text" oninput="searchGlobal(this.value)" placeholder="Search the decentralized network..." class="w-full bg-white/5 border border-white/10 rounded-[2.5rem] py-7 pl-20 pr-8 text-2xl focus:outline-none focus:border-blue-500 transition-all shadow-2xl">
+                <div id="searchHits" class="absolute top-24 left-0 right-0 bg-[#111] border border-white/10 rounded-[2rem] p-4 z-50 hidden shadow-3xl max-h-[500px] overflow-y-auto custom-scroll"></div>
+            </div>
+
+            <div class="flex items-center justify-between mb-8 px-4">
+                <h2 class="text-2xl font-black italic tracking-tighter">Recommended Nodes</h2>
+                <button class="text-xs font-black text-blue-400 uppercase tracking-widest border-b border-blue-400">Refresh Chain</button>
+            </div>
+            
+            <div id="exploreGrid" class="grid grid-cols-3 gap-2 md:gap-6"></div>
+        </div>
+
+        <!-- REELS MODULE -->
+        <div id="reels" class="page hidden reels-container no-scrollbar"></div>
+
+        <!-- MESSAGE MODULE -->
+        <div id="dm" class="page hidden h-full flex fade-in">
+            <div class="w-1/3 border-r border-white/10 p-10 flex flex-col bg-black">
+                <h2 class="text-4xl font-black mb-10 tracking-tighter italic">Comms</h2>
+                <div class="space-y-3 flex-1 overflow-y-auto custom-scroll pr-4" id="chatList"></div>
+            </div>
+            <div class="flex-1 flex flex-col bg-[#020202] relative" id="chatContainer">
+                <div id="noChatSelected" class="absolute inset-0 flex flex-col items-center justify-center p-12 animate-pulse text-center">
+                    <div class="w-32 h-32 bg-white/5 rounded-full flex items-center justify-center mb-8 border border-white/5"><i data-lucide="message-square" size="48" class="text-gray-700"></i></div>
+                    <h3 class="text-3xl font-black mb-4">Neural Sync Idle</h3>
+                    <p class="text-gray-500 max-w-sm">Select a node from the left panel to establish a secure encrypted connection.</p>
+                </div>
+                <div id="activeChat" class="flex-1 flex flex-col hidden h-full">
+                    <div class="p-8 border-b border-white/5 flex items-center justify-between bg-black/80 backdrop-blur-3xl">
+                        <div class="flex items-center gap-5">
+                            <div id="chatPfp" class="w-14 h-14 rounded-full border border-white/10 shadow-lg"></div>
+                            <div>
+                                <h3 id="chatName" class="text-xl font-black">Node</h3>
+                                <p class="text-[10px] text-green-500 font-bold uppercase tracking-[0.3em]">Neural Link Secure</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-8 text-gray-400">
+                            <button onclick="startCall('audio')" class="hover:text-blue-400 transition-colors"><i data-lucide="phone" size="24"></i></button>
+                            <button onclick="startCall('video')" class="hover:text-purple-400 transition-colors"><i data-lucide="video" size="24"></i></button>
+                            <i data-lucide="more-vertical" class="cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div id="msgStream" class="flex-1 p-10 overflow-y-auto space-y-8 custom-scroll"></div>
+                    <div class="p-8 border-t border-white/5 bg-black flex gap-5 items-center">
+                        <button onclick="triggerUp('dm-media')" class="text-blue-400 hover:text-white transition-colors"><i data-lucide="image" size="24"></i></button>
+                        <div class="flex-1 bg-white/5 border border-white/10 rounded-[2rem] px-8 py-5 flex items-center focus-within:border-blue-500">
+                            <input id="dmInput" onkeypress="if(event.key==='Enter') sendMsg()" type="text" placeholder="Send neural pulse..." class="flex-1 bg-transparent text-lg focus:outline-none">
+                            <span class="text-2xl cursor-pointer hover:scale-125 transition-transform ml-4">⚡</span>
+                        </div>
+                        <button onclick="sendMsg()" class="bg-blue-600 p-5 rounded-full shadow-2xl hover:scale-110 active:scale-95 transition-all"><i data-lucide="send" size="22"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PROFILE MODULE -->
+        <div id="profile" class="page hidden max-w-5xl mx-auto py-20 px-12 fade-in">
+            <div class="flex flex-col md:flex-row items-center gap-20 mb-24 border-b border-white/5 pb-24">
+                <div class="relative group cursor-pointer" onclick="triggerUp('pfp')">
+                    <div class="w-52 h-52 rounded-full p-1.5 bg-gradient-to-tr from-blue-500 via-purple-600 to-pink-500 pulse-glow">
+                        <img id="pfp-main" src="" class="w-full h-full rounded-full border-8 border-black object-cover">
+                    </div>
+                    <div class="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all font-black text-xs uppercase tracking-widest">Update Essence</div>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                    <div class="flex flex-col lg:flex-row items-center gap-10 mb-10">
+                        <h2 id="p-handle" class="text-5xl font-black tracking-tighter italic">handle</h2>
+                        <div class="flex gap-4">
+                            <button onclick="openEditor()" class="px-10 py-3 bg-white text-black font-black rounded-2xl hover:bg-gray-200 transition-all shadow-xl">Edit Profile</button>
+                            <button onclick="openSettings()" class="p-3 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10"><i data-lucide="settings"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex justify-center md:justify-start gap-16 mb-10">
+                        <div class="text-center md:text-left"><span id="c-posts" class="block text-3xl font-black">0</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Syncs</p></div>
+                        <div class="text-center md:text-left"><span id="c-followers" class="block text-3xl font-black">0</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Followers</p></div>
+                        <div class="text-center md:text-left"><span id="c-following" class="block text-3xl font-black">0</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Following</p></div>
+                    </div>
+                    <p id="p-name" class="text-2xl font-black mb-3">Name</p>
+                    <p id="p-bio" class="text-gray-400 text-lg leading-relaxed max-w-xl">Bio...</p>
+                </div>
+            </div>
+
+            <div class="flex justify-center gap-20 mb-12 sticky top-0 bg-black/80 backdrop-blur-md z-40 py-4">
+                <button onclick="switchProfTab('posts')" id="tab-posts" class="flex items-center gap-3 font-black uppercase text-xs tracking-widest border-t-2 border-white pt-4 transition-all">
+                    <i data-lucide="grid" size="16"></i> Posts
+                </button>
+                <button onclick="switchProfTab('saved')" id="tab-saved" class="flex items-center gap-3 font-black uppercase text-xs tracking-widest text-gray-500 hover:text-white pt-4 transition-all">
+                    <i data-lucide="bookmark" size="16"></i> Saved
+                </button>
+                <button onclick="switchProfTab('reels')" id="tab-reels" class="flex items-center gap-3 font-black uppercase text-xs tracking-widest text-gray-500 hover:text-white pt-4 transition-all">
+                    <i data-lucide="video" size="16"></i> Reels
+                </button>
+            </div>
+
+            <div id="matrix-content" class="grid grid-cols-3 gap-1 md:gap-6"></div>
+        </div>
+    </main>
+
+    <!-- OVERLAYS & MODALS -->
+    
+    <!-- USER PROFILE VIEWER OVERLAY -->
+    <div id="userProfileModal" class="fixed inset-0 bg-black/95 backdrop-blur-3xl z-[500] hidden overflow-y-auto no-scrollbar pt-20">
+        <button onclick="closeViewer()" class="fixed top-10 right-10 z-50 p-4 bg-white/10 rounded-full hover:bg-white/20 transition-all"><i data-lucide="x"></i></button>
+        <div id="viewerContent" class="max-w-5xl mx-auto p-12"></div>
+    </div>
+
+    <!-- CREATE OVERLAY -->
+    <div id="createModal" class="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[400] hidden flex flex-col items-center justify-center p-10">
+        <button onclick="document.getElementById('createModal').classList.add('hidden')" class="absolute top-10 right-10 p-4"><i data-lucide="x" size="40"></i></button>
+        <div id="createSelection" class="grid grid-cols-2 lg:grid-cols-4 gap-12 max-w-5xl w-full">
+            <div onclick="triggerUp('story')" class="bg-blue-600/10 border border-blue-500/20 p-12 rounded-[3.5rem] text-center cursor-pointer hover:scale-110 hover:bg-blue-600/30 transition-all group">
+                <i data-lucide="sparkles" size="64" class="inline-block mb-6 text-blue-400 group-hover:rotate-12 transition-transform"></i>
+                <h3 class="font-black italic text-xl uppercase tracking-widest">Story</h3>
+            </div>
+            <div onclick="triggerUp('post')" class="bg-purple-600/10 border border-purple-500/20 p-12 rounded-[3.5rem] text-center cursor-pointer hover:scale-110 hover:bg-purple-600/30 transition-all group">
+                <i data-lucide="image" size="64" class="inline-block mb-6 text-purple-400 group-hover:rotate-12 transition-transform"></i>
+                <h3 class="font-black italic text-xl uppercase tracking-widest">Post</h3>
+            </div>
+            <div onclick="triggerUp('reel')" class="bg-pink-600/10 border border-pink-500/20 p-12 rounded-[3.5rem] text-center cursor-pointer hover:scale-110 hover:bg-pink-600/30 transition-all group">
+                <i data-lucide="video" size="64" class="inline-block mb-6 text-pink-400 group-hover:rotate-12 transition-transform"></i>
+                <h3 class="font-black italic text-xl uppercase tracking-widest">Reel</h3>
+            </div>
+            <div onclick="alert('Neural Stream coming soon...')" class="bg-orange-600/10 border border-orange-500/20 p-12 rounded-[3.5rem] text-center cursor-pointer hover:scale-110 hover:bg-orange-600/30 transition-all group">
+                <i data-lucide="radio" size="64" class="inline-block mb-6 text-orange-400 group-hover:rotate-12 transition-transform"></i>
+                <h3 class="font-black italic text-xl uppercase tracking-widest">Live</h3>
+            </div>
+        </div>
+
+        <div id="finalizeBox" class="hidden w-full max-w-2xl bg-[#0a0a0a] border border-white/5 p-12 rounded-[4rem] animate-slide-up">
+            <h2 id="finalTitle" class="text-4xl font-black mb-10 italic">Create new post</h2>
+            <div id="finalPreview" class="w-full aspect-square bg-black rounded-[2.5rem] border border-white/5 mb-10 overflow-hidden flex items-center justify-center"></div>
+            <textarea id="finalCaption" placeholder="Write a caption..." class="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-xl mb-10 focus:outline-none focus:border-blue-500 h-40"></textarea>
+            <div id="storyAdditions" class="hidden flex gap-4 mb-10">
+                <input id="mentionUser" placeholder="@mention" class="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none">
+                <input id="storyText" placeholder="Overlay Text" class="flex-1 bg-white/5 border border-white/10 rounded-2xl p-4 focus:outline-none">
+            </div>
+            <button onclick="commitSync()" class="w-full py-7 btn-premium text-white font-black rounded-3xl text-xl uppercase tracking-[0.3em]">Post</button>
+        </div>
+    </div>
+
+    <!-- STORY VIEWER -->
+    <div id="storyViewer" class="fixed inset-0 bg-black z-[1000] hidden flex flex-col p-6 animate-blur-fade">
+        <div class="flex gap-2 mb-8 items-center" id="storyBars"></div>
+        <div class="flex items-center justify-between mb-10 relative z-50">
+            <div class="flex items-center gap-4">
+                <img id="sv-avatar" class="w-12 h-12 rounded-full border border-white/20">
+                <span id="sv-user" class="text-lg font-black italic">user</span>
+            </div>
+            <button onclick="closeStory()" class="p-3 bg-white/10 rounded-full"><i data-lucide="x"></i></button>
+        </div>
+        <div id="sv-media" class="flex-1 flex items-center justify-center relative overflow-hidden rounded-[3rem]">
+            <div id="sv-overlay" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-white text-4xl font-black tracking-widest drop-shadow-2xl"></div>
+        </div>
+        <div class="p-10 flex gap-6 items-center">
+            <input type="text" placeholder="Send wave..." class="flex-1 bg-white/5 border border-white/10 rounded-[2rem] px-8 py-4 focus:outline-none">
+            <button class="hover:scale-125 transition-transform"><i data-lucide="heart" size="32"></i></button>
+            <button class="hover:scale-125 transition-transform"><i data-lucide="send" size="32"></i></button>
+        </div>
+    </div>
+
+    <!-- CALL OVERLAY -->
+    <div id="callOverlay" class="fixed inset-0 bg-black/90 backdrop-blur-3xl z-[2000] hidden flex flex-col items-center justify-center text-center">
+        <div class="w-40 h-40 rounded-full border-4 border-blue-500 p-2 mb-10 animate-pulse">
+            <img id="callPfp" src="" class="w-full h-full rounded-full object-cover">
+        </div>
+        <h2 id="callName" class="text-4xl font-black mb-4 italic">Collaborator</h2>
+        <p class="text-blue-400 font-bold uppercase tracking-[0.5em] mb-20">Secure Neural Link Connecting...</p>
+        <div class="flex gap-16">
+            <button onclick="endCall()" class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all"><i data-lucide="phone-off" size="32"></i></button>
+            <button onclick="endCall()" class="w-20 h-20 bg-green-600 rounded-full flex items-center justify-center hover:scale-110 active:scale-95 transition-all"><i data-lucide="phone" size="32"></i></button>
+        </div>
+    </div>
+
+    <!-- UNIVERSAL INPUT -->
+    <input type="file" id="uInput" hidden onchange="handleFile(event)">
+
+    <script>
+        // --- REAL-TIME DATA ARCHITECTURE (Mock Backend) ---
+        let db = {
+            me: {
+                handle: 'ayush_kumar_ai',
+                name: 'Ayush Kumar',
+                bio: 'Neural Architect | Building the decentralized future of social stream 🚀',
+                avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Ayush',
+                posts: [],
+                followers: 1250000,
+                following: 450,
+                saved: [],
+                followingList: [], // Handles of people I follow
+                likedPosts: []
+            },
+            users: [], // Global list of nodes
+            stories: [], // Array of story objects
+            messages: {}, // Handle -> msg arrays
+            activeViewUser: null
+        };
+
+        // Initialize Global Users (~100 users)
+        const names = ["Viru", "Musk", "Zendaya", "Ronaldo", "Messi", "Deepika", "Salman", "Modi", "Sundar", "Satya", "Zuck", "Gate", "Swift", "Bieber", "Neymar"];
+        for(let i=0; i<100; i++) {
+            const h = names[i % names.length].toLowerCase() + (100+i);
+            db.users.push({
+                handle: h,
+                name: names[i % names.length] + " Node " + (i+1),
+                avatar: `https://i.pravatar.cc/150?u=${h}`,
+                bio: `Injected Matrix Unit #${i+1000} | Neural Link Verified`,
+                followers: Math.floor(Math.random() * 5000000),
+                following: Math.floor(Math.random() * 800),
+                posts: [] // To be filled
+            });
+        }
+
+        // Persistence
+        if(localStorage.getItem('insta_pro_db_v3')) {
+            db = JSON.parse(localStorage.getItem('insta_pro_db_v3'));
+        }
+        function save() { localStorage.setItem('insta_pro_db_v3', JSON.stringify(db)); }
+
+        // --- CORE NAVIGATION ---
+        function nav(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+            document.getElementById(id).classList.remove('hidden');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-nav'));
+            document.getElementById('nav-' + id).classList.add('active-nav');
+
+            if(id === 'home') renderHome();
+            if(id === 'explore') renderExplore();
+            if(id === 'reels') renderReels();
+            if(id === 'dm') renderChats();
+            if(id === 'profile') renderProfile();
+
+            lucide.createIcons();
+            save();
+        }
+
+        // --- HOME / STORY SYSTEM ---
+        function renderHome() {
+            const hStories = document.getElementById('homeStories');
+            hStories.innerHTML = '';
+            
+            // System stories
+            db.users.slice(0, 10).forEach((u, i) => {
+                hStories.innerHTML += `
+                    <div class="flex-shrink-0 text-center cursor-pointer group" onclick="viewStory('${u.handle}', '${u.avatar}')">
+                        <div class="story-ring p-[2px] mb-2 border-2 border-black">
+                            <img src="${u.avatar}" class="w-16 h-16 rounded-full border-2 border-black object-cover">
+                        </div>
+                        <span class="text-[10px] text-gray-500 font-black uppercase tracking-widest">${u.handle}</span>
+                    </div>`;
+            });
+
+            // My stories
+            db.stories.forEach((s, i) => {
+                hStories.innerHTML += `
+                    <div class="flex-shrink-0 text-center cursor-pointer group" onclick="viewMyStory(${i})">
+                        <div class="story-ring p-[2px] mb-2 border-2 border-black">
+                            <img src="${db.me.avatar}" class="w-16 h-16 rounded-full border-2 border-black object-cover">
+                        </div>
+                        <span class="text-[10px] text-blue-400 font-black uppercase tracking-widest">My Story</span>
+                    </div>`;
+            });
+
+            renderFeed();
+        }
+
+        function renderFeed() {
+            const stream = document.getElementById('feedStream');
+            stream.innerHTML = '';
+            
+            // Me First
+            db.me.posts.reverse().forEach((p, i) => {
+                stream.innerHTML += createPostUI('my_'+i, db.me.handle, db.me.avatar, p.url, p.caption, true, p.type);
+            });
+
+            // Random Global
+            db.users.slice(0, 15).forEach((u, i) => {
+                stream.innerHTML += createPostUI('glob_'+i, u.handle, u.avatar, `https://picsum.photos/800/1000?random=${i+50}`, `Synced with node ${u.handle} at 120Gbps. The decentralized stream is growing.`);
+            });
+            lucide.createIcons();
+        }
+
+        function createPostUI(id, handle, pfp, url, caption, isMe=false, type='image') {
+            const isLiked = db.me.likedPosts.includes(id);
+            const isSaved = db.me.saved.includes(id);
+            return `
+                <div class="bg-white/5 rounded-[3.5rem] border border-white/5 overflow-hidden shadow-3xl hover:border-white/10 transition-all flex flex-col">
+                    <div class="p-7 flex items-center justify-between">
+                        <div class="flex items-center gap-5 cursor-pointer" onclick="viewUserProfile('${handle}')">
+                            <img src="${pfp}" class="w-12 h-12 rounded-full border-2 border-white/10 p-0.5">
+                            <div>
+                                <h4 class="font-black italic text-sm">${handle}</h4>
+                                <p class="text-[9px] text-gray-500 uppercase tracking-widest font-black">Neural Contributor</p>
+                            </div>
+                        </div>
+                        ${isMe ? `<button onclick="deletePost('${id}')" class="text-red-500"><i data-lucide="trash-2" size="20"></i></button>` : `<i data-lucide="more-horizontal" class="text-gray-600"></i>`}
+                    </div>
+                    <div class="aspect-square bg-black flex items-center justify-center relative overflow-hidden group" ondblclick="likePost('${id}')">
+                        ${type==='video' ? `<video src="${url}" loop muted autoplay class="w-full h-full object-cover"></video>` : `<img src="${url}" class="w-full h-full object-cover">`}
+                        <div id="heart-${id}" class="absolute inset-0 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300"><i data-lucide="heart" size="120" class="fill-red-600 text-red-600 animate-pop"></i></div>
+                    </div>
+                    <div class="p-8">
+                        <div class="flex gap-8 mb-6">
+                            <button onclick="likePost('${id}')"><i data-lucide="heart" class="hover:scale-125 transition-transform ${isLiked ? 'fill-red-600 text-red-600' : ''}"></i></button>
+                            <i data-lucide="message-circle" class="hover:scale-125 transition-transform"></i>
+                            <i data-lucide="send" class="hover:scale-125 transition-transform" onclick="shareToDMs('${id}')"></i>
+                            <i data-lucide="bookmark" onclick="toggleSave('${id}')" class="ml-auto hover:darken transition-colors ${isSaved ? 'fill-white' : ''}"></i>
+                        </div>
+                        <p class="font-black text-sm mb-3">${isLiked ? 1 : 0} interactions</p>
+                        <p class="text-sm leading-relaxed"><span class="font-black mr-2">${handle}</span> ${caption}</p>
+                        <p class="text-[9px] text-gray-700 mt-6 font-black uppercase tracking-[0.5em]">Encryption: SHA-256 Neural</p>
+                    </div>
+                </div>`;
+        }
+
+        // --- EXPLORE & PROFILE VIEWING ---
+        function renderExplore() {
+            const grid = document.getElementById('exploreGrid');
+            grid.innerHTML = '';
+            for(let i=0; i<30; i++) {
+                grid.innerHTML += `
+                    <div class="aspect-square bg-white/5 rounded-2xl overflow-hidden cursor-pointer group relative shadow-xl" onclick="viewUserProfile('${db.users[i].handle}')">
+                        <img src="https://picsum.photos/600/600?random=${i+100}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="font-black text-xs uppercase tracking-widest">${db.users[i].handle}</span>
+                        </div>
+                    </div>`;
+            }
+            lucide.createIcons();
+        }
+
+        function viewUserProfile(handle) {
+            const user = db.users.find(u => u.handle === handle) || db.me;
+            const isMe = handle === db.me.handle;
+            const isFollowing = db.me.followingList.includes(handle);
+            
+            const modal = document.getElementById('userProfileModal');
+            document.getElementById('viewerContent').innerHTML = `
+                <div class="flex flex-col md:flex-row items-center gap-20 mb-24 pb-20 border-b border-white/5">
+                    <div class="w-52 h-52 rounded-full p-1.5 bg-gradient-to-tr from-blue-500 to-pink-500">
+                        <img src="${user.avatar}" class="w-full h-full rounded-full border-8 border-black">
+                    </div>
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="flex flex-col lg:flex-row items-center gap-10 mb-10">
+                            <h2 class="text-5xl font-black italic tracking-tighter">${user.handle}</h2>
+                            ${!isMe ? `<button onclick="toggleFollow('${handle}')" id="btn-follow-${handle}" class="px-12 py-3 ${isFollowing ? 'bg-white/10 text-white' : 'bg-white text-black'} font-black rounded-3xl transition-all shadow-2xl">${isFollowing ? 'Following' : 'Follow Node'}</button>` : ''}
+                            <div class="flex gap-5">
+                                <button onclick="openChatWith('${handle}')" class="p-3 bg-white/5 rounded-2xl border border-white/10"><i data-lucide="message-circle"></i></button>
+                                <button class="p-3 bg-white/5 rounded-2xl border border-white/10"><i data-lucide="more-vertical"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex justify-center md:justify-start gap-20 mb-10">
+                            <div class="text-center md:text-left"><span class="block text-3xl font-black">${isMe ? db.me.posts.length : 12}</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Calculations</p></div>
+                            <div class="text-center md:text-left"><span class="block text-3xl font-black">${user.followers + (isFollowing ? 1 : 0)}</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Nodes</p></div>
+                            <div class="text-center md:text-left"><span class="block text-3xl font-black">${user.following}</span><p class="text-[10px] text-gray-500 font-black uppercase tracking-widest">Connects</p></div>
+                        </div>
+                        <p class="text-2xl font-black mb-2">${user.name}</p>
+                        <p class="text-gray-400 text-xl leading-relaxed max-w-xl">${user.bio}</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-1 md:gap-6">
+                    ${Array(12).fill(0).map((_, i) => `<div class="aspect-square bg-white/5 rounded-2xl overflow-hidden hover:opacity-80 transition-opacity"><img src="https://picsum.photos/600/600?random=${handle}${i}" class="w-full h-full object-cover"></div>`).join('')}
+                </div>`;
+            
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function toggleFollow(handle) {
+            if(db.me.followingList.includes(handle)) {
+                db.me.followingList = db.me.followingList.filter(h => h !== handle);
+                db.me.following--;
+            } else {
+                db.me.followingList.push(handle);
+                db.me.following++;
+            }
+            save();
+            viewUserProfile(handle);
+            renderProfile();
+        }
+
+        function closeViewer() { document.getElementById('userProfileModal').classList.add('hidden'); }
+
+        // --- REELS (Enhanced Sound & Interactive) ---
+        function renderReels() {
+            const reels = document.getElementById('reels');
+            reels.innerHTML = '';
+            for(let i=0; i<60; i++) {
+                const u = db.users[i % db.users.length];
+                reels.innerHTML += `
+                    <div class="reel-unit">
+                        <video class="w-full h-full object-cover" loop data-idx="${i}">
+                            <source src="https://shaky-hands.com/samples/video${(i % 5)+1}.mp4" type="video/mp4">
+                            <source src="https://assets.mixkit.co/videos/preview/mixkit-futuristic-city-with-neon-lights-at-night-40150-large.mp4" type="video/mp4">
+                        </video>
+                        <div class="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/80 z-10 pointer-events-none"></div>
+                        
+                        <div class="absolute bottom-16 left-10 z-20 w-3/4 animate-slide-up">
+                            <div class="flex items-center gap-4 mb-6">
+                                <img src="${u.avatar}" class="w-14 h-14 rounded-full border-2 border-white/20">
+                                <h4 class="text-xl font-black italic">${u.handle}</h4>
+                                <button onclick="toggleFollow('${u.handle}')" class="px-7 py-2 border border-white/60 rounded-full text-xs font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all">Follow</button>
+                            </div>
+                            <p class="text-lg opacity-90 leading-relaxed mb-6">Synchronizing with the neural city. The decentralized dream is real. #NeuralArt #AI #Future</p>
+                            <div class="flex items-center gap-3 bg-white/10 w-fit px-6 py-2.5 rounded-full border border-white/10">
+                                <i data-lucide="music" size="14"></i> <p class="text-xs font-black italic">Sound of the Infinite • ${u.name}</p>
+                            </div>
+                        </div>
+
+                        <div class="absolute bottom-20 right-8 z-20 flex flex-col gap-10 items-center">
+                            <div class="text-center group cursor-pointer" onclick="likePost('reel'+i)">
+                                <i data-lucide="heart" size="36" class="group-active:scale-150 transition-transform"></i>
+                                <span class="text-xs font-black block mt-2">${(Math.random()*200).toFixed(1)}k</span>
+                            </div>
+                            <div class="text-center cursor-pointer">
+                                <i data-lucide="message-circle" size="36"></i>
+                                <span class="text-xs font-black block mt-2">${Math.floor(Math.random()*5000)}</span>
+                            </div>
+                            <div class="text-center cursor-pointer" onclick="shareToDMs('reel'+i)">
+                                <i data-lucide="send" size="36"></i>
+                                <span class="text-xs font-black block mt-2">Relay</span>
+                            </div>
+                            <div class="w-14 h-14 border-2 border-white rounded-2xl overflow-hidden animate-spin-slow">
+                                <img src="https://picsum.photos/100/100?random=r${i}" class="w-full h-full">
+                            </div>
+                        </div>
+                        
+                        <!-- Tap to play/pause/sound toggle -->
+                        <div class="absolute inset-0 z-0 cursor-pointer" onclick="toggleReelPlay(this)"></div>
+                    </div>`;
+            }
+            lucide.createIcons();
+            
+            // Start playing first reel
+            setTimeout(() => {
+                const first = document.querySelector('.reel-unit video');
+                if(first) first.play();
+            }, 500);
+        }
+
+        function toggleReelPlay(overlay) {
+            const video = overlay.parentElement.querySelector('video');
+            if(video.paused) { video.play(); video.muted = false; } else { video.pause(); }
+        }
+
+        // --- COMMS & CALLS ---
+        function renderChats() {
+            const list = document.getElementById('chatList');
+            list.innerHTML = '';
+            db.users.slice(0, 20).forEach(u => {
+                list.innerHTML += `
+                    <div class="flex items-center gap-5 p-5 rounded-[2rem] hover:bg-white/5 cursor-pointer transition-all ${db.activeChatHandle === u.handle ? 'bg-white/10' : ''}" onclick="selectNode('${u.handle}')">
+                        <img src="${u.avatar}" class="w-16 h-16 rounded-full border border-white/5">
+                        <div class="flex-1 overflow-hidden font-bold">
+                            <p class="text-lg tracking-tighter">${u.handle}</p>
+                            <p class="text-xs text-gray-500 truncate">${db.messages[u.handle] ? db.messages[u.handle].slice(-1)[0].text : 'Signal established...'}</p>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function selectNode(handle) {
+            db.activeChatHandle = handle;
+            const u = db.users.find(x => x.handle === handle);
+            document.getElementById('noChatSelected').classList.add('hidden');
+            document.getElementById('activeChat').classList.remove('hidden');
+            document.getElementById('chatName').innerText = u.handle;
+            document.getElementById('chatPfp').innerHTML = `<img src="${u.avatar}" class="w-full h-full rounded-full border-2 border-white/10 object-cover">`;
+            renderMessages();
+            renderChats();
+        }
+
+        function openChatWith(h) {
+            closeViewer();
+            nav('dm');
+            selectNode(h);
+        }
+
+        function renderMessages() {
+            const stream = document.getElementById('msgStream');
+            const msgs = db.messages[db.activeChatHandle] || [{sender: 'them', text: 'Neural channel secured. Listening for input...'}];
+            stream.innerHTML = '';
+            msgs.forEach(m => {
+                const isMe = m.sender === 'me';
+                stream.innerHTML += `
+                    <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                        <div class="max-w-[75%] ${isMe ? 'bg-blue-600 rounded-[2.5rem] rounded-tr-none' : 'bg-white/5 border border-white/10 rounded-[2.5rem] rounded-tl-none'} px-8 py-5 shadow-2xl">
+                            <p class="text-[16px] font-medium leading-relaxed">${m.text}</p>
+                            <span class="text-[8px] opacity-40 block mt-2 uppercase font-black tracking-widest text-right">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>
+                        </div>
+                    </div>`;
+            });
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        function sendMsg() {
+            const input = document.getElementById('dmInput');
+            if(!input.value || !db.activeChatHandle) return;
+            if(!db.messages[db.activeChatHandle]) db.messages[db.activeChatHandle] = [];
+            db.messages[db.activeChatHandle].push({sender: 'me', text: input.value});
+            input.value = '';
+            renderMessages();
+            save();
+            renderChats();
+        }
+
+        function startCall(type) {
+            const u = db.users.find(x => x.handle === db.activeChatHandle);
+            document.getElementById('callOverlay').classList.remove('hidden');
+            document.getElementById('callPfp').src = u.avatar;
+            document.getElementById('callName').innerText = u.handle;
+            lucide.createIcons();
+        }
+        function endCall() { document.getElementById('callOverlay').classList.add('hidden'); }
+
+        // --- PRODUCTION FLOW (Sync Matrix) ---
+        let creationType = '';
+        function openCreate() {
+            document.getElementById('createModal').classList.remove('hidden');
+            document.getElementById('createSelection').classList.remove('hidden');
+            document.getElementById('finalizeBox').classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        function triggerUp(type) { creationType = type; document.getElementById('uInput').click(); }
+
+        let activeFile = null;
+        function handleFile(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const url = URL.createObjectURL(file);
+            const type = file.type.startsWith('video') ? 'video' : 'image';
+            activeFile = {url, type};
+
+            if(creationType === 'pfp') {
+                db.me.avatar = url;
+                save();
+                renderProfile();
+                return;
+            }
+
+            document.getElementById('createSelection').classList.add('hidden');
+            document.getElementById('finalizeBox').classList.remove('hidden');
+            document.getElementById('finalTitle').innerText = `Matrix ${creationType.toUpperCase()} initialization`;
+            
+            const preview = document.getElementById('finalPreview');
+            preview.innerHTML = type === 'video' ? `<video src="${url}" autoplay muted loop class="w-full h-full object-cover"></video>` : `<img src="${url}" class="w-full h-full object-cover">`;
+            
+            const storyUI = document.getElementById('storyAdditions');
+            if(creationType === 'story') storyUI.classList.remove('hidden'); else storyUI.classList.add('hidden');
+        }
+
+        function commitSync() {
+            const cap = document.getElementById('finalCaption').value;
+            const mention = document.getElementById('mentionUser').value;
+            const text = document.getElementById('storyText').value;
+
+            if(creationType === 'story') {
+                db.stories.unshift({url: activeFile.url, type: activeFile.type, mention, text, viewed: false});
+            } else if(creationType === 'post') {
+                db.me.posts.push({url: activeFile.url, type: activeFile.type, caption: cap});
+            } else if(creationType === 'reel') {
+                alert('Neural Reel synchronized to the global feed!');
+            }
+
+            save();
+            document.getElementById('createModal').classList.add('hidden');
+            nav(creationType === 'story' ? 'home' : 'profile');
+            alert(`${creationType.toUpperCase()} successfully initialized in matrix.`);
+        }
+
+        // --- POST INTERACTIONS (Real Counts & Save) ---
+        function likePost(id) {
+            if(db.me.likedPosts.includes(id)) {
+                db.me.likedPosts = db.me.likedPosts.filter(x => x !== id);
+            } else {
+                db.me.likedPosts.push(id);
+                animateHeart(id);
+            }
+            save();
+            renderFeed();
+        }
+
+        function animateHeart(id) {
+            const h = document.getElementById('heart-'+id);
+            if(h) { h.style.opacity = '1'; setTimeout(() => h.style.opacity = '0', 600); }
+        }
+
+        function toggleSave(id) {
+            if(db.me.saved.includes(id)) {
+                db.me.saved = db.me.saved.filter(x => x !== id);
+                alert('Neutral link decoupled.');
+            } else {
+                db.me.saved.push(id);
+                alert('Encoded and archived safely.');
+            }
+            save();
+            renderFeed();
+        }
+
+        function deletePost(id) {
+            if(confirm("Terminate this matrix node?")) {
+                const idx = parseInt(id.split('_')[1]);
+                db.me.posts.splice(db.me.posts.length - 1 - idx, 1);
+                save();
+                renderProfile();
+                renderFeed();
+            }
+        }
+
+        // --- PROFILE EDITING & SETTINGS ---
+        function openEditor() {
+            document.getElementById('editProfileModal').classList.remove('hidden');
+            document.getElementById('edit-name').value = db.me.name;
+            document.getElementById('edit-handle').value = db.me.handle;
+            document.getElementById('edit-about').value = db.me.bio;
+            document.getElementById('edit-pfp-preview').src = db.me.avatar;
+            lucide.createIcons();
+        }
+
+        function saveProfile() {
+            db.me.name = document.getElementById('edit-name').value;
+            db.me.handle = document.getElementById('edit-handle').value;
+            db.me.bio = document.getElementById('edit-about').value;
+            db.me.avatar = document.getElementById('edit-pfp-preview').src;
+            save();
+            renderProfile();
+            closeEditProfile();
+            alert("Neural signature updated.");
+        }
+
+        function closeEditProfile() { document.getElementById('editProfileModal').classList.add('hidden'); }
+        function openSettings() { document.getElementById('settingsModal').classList.remove('hidden'); lucide.createIcons(); }
+        function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function logout() { if(confirm("Terminate session?")) window.location.href = "insta.html"; }
+
+        // --- PROFILE MATRIX VIEWER ---
+        let currentProfTab = 'posts';
+        function switchProfTab(tab) {
+            currentProfTab = tab;
+            document.querySelectorAll('#profile button').forEach(b => b.classList.remove('border-white', 'text-white'));
+            document.querySelectorAll('#profile button').forEach(b => b.classList.add('text-gray-500'));
+            document.getElementById('tab-'+tab).classList.remove('text-gray-500');
+            document.getElementById('tab-'+tab).classList.add('border-white', 'text-white');
+            renderProfileContent();
+        }
+
+        function renderProfileContent() {
+            const grid = document.getElementById('matrix-content');
+            grid.innerHTML = '';
+            
+            let data = [];
+            if(currentProfTab === 'posts') data = db.me.posts;
+            else if(currentProfTab === 'saved') data = db.me.saved.map(id => ({url: `https://picsum.photos/600/600?seed=${id}`, type: 'image'}));
+            else if(currentProfTab === 'reels') data = Array(6).fill({type: 'video', url: 'https://assets.mixkit.co/videos/preview/mixkit-cyberpunk-landscape-city-with-neon-lights-40150-large.mp4'});
+
+            data.reverse().forEach(p => {
+                grid.innerHTML += `
+                    <div class="aspect-square bg-white/5 rounded-2xl overflow-hidden group relative">
+                        ${p.type === 'video' ? `<video src="${p.url}" muted onmouseover="this.play()" onmouseout="this.pause()" class="w-full h-full object-cover"></video>` : `<img src="${p.url}" class="w-full h-full object-cover">`}
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-6 font-black text-xs">
+                            <span><i data-lucide="heart" size="14"></i> 124</span>
+                            <span><i data-lucide="message-circle" size="14"></i> 12</span>
+                        </div>
+                    </div>`;
+            });
+            lucide.createIcons();
+        }
+
+        function renderProfile() {
+            document.getElementById('p-name').innerText = db.me.name;
+            document.getElementById('p-handle').innerText = db.me.handle;
+            document.getElementById('p-bio').innerText = db.me.bio;
+            document.getElementById('pfp-main').src = db.me.avatar;
+            document.getElementById('c-posts').innerText = db.me.posts.length;
+            document.getElementById('c-followers').innerText = (db.me.followers / 1000000).toFixed(1) + 'M';
+            document.getElementById('c-following').innerText = db.me.followingList.length;
+            renderProfileContent();
+        }
+
+        // --- STORY VIEWER ENGINE ---
+        let currentS_Handle = '';
+        let currentS_Media = [];
+        let s_idx = 0;
+        let s_timer;
+
+        function viewStory(handle, avatar) {
+            currentS_Handle = handle;
+            currentS_Media = [{url: `https://picsum.photos/1080/1920?random=${handle}`, type:'image', text:'Story from future'}];
+            s_idx = 0;
+            openSViewer(avatar);
+        }
+
+        function viewMyStory(idx) {
+            currentS_Handle = db.me.handle;
+            currentS_Media = [db.stories[idx]];
+            s_idx = 0;
+            openSViewer(db.me.avatar);
+        }
+
+        function openSViewer(pfp) {
+            const viewer = document.getElementById('storyViewer');
+            viewer.classList.remove('hidden');
+            document.getElementById('sv-avatar').src = pfp;
+            document.getElementById('sv-user').innerText = currentS_Handle;
+            
+            const media = currentS_Media[s_idx];
+            const cont = document.getElementById('sv-media');
+            cont.innerHTML = media.type === 'video' ? `<video src="${media.url}" autoplay class="max-h-full max-w-full"></video>` : `<img src="${media.url}" class="max-h-full max-w-full">`;
+            
+            if(media.text) document.getElementById('sv-overlay').innerText = media.text; else document.getElementById('sv-overlay').innerText = '';
+
+            const bars = document.getElementById('storyBars');
+            bars.innerHTML = currentS_Media.map((_, i) => `<div class="prog-bar"><div class="prog-fill ${i < s_idx ? 'w-full' : (i === s_idx ? 'animate-prog' : '')}"></div></div>`).join('');
+
+            clearTimeout(s_timer);
+            s_timer = setTimeout(() => {
+                if(s_idx < currentS_Media.length - 1) { s_idx++; openSViewer(pfp); } else { closeStory(); }
+            }, 5000);
+            lucide.createIcons();
+        }
+        function closeStory() { document.getElementById('storyViewer').classList.add('hidden'); clearTimeout(s_timer); }
+
+        function shareToDMs(id) { alert(`Encoded node ${id} relaying to all active neural channels...`); }
+
+        // --- DATA SYNC BOOTSTRAP ---
+        async function bootMatrix() {
+            try {
+                const [uRes, pRes, rRes] = await Promise.all([
+                    fetch('users_data.json'),
+                    fetch('posts_data.json'),
+                    fetch('reels_data.json')
+                ]);
+                
+                if(uRes.ok) state.allUsers = await uRes.json();
+                if(pRes.ok) {
+                    const extPosts = await pRes.json();
+                    // Optional: Merge or prepend external posts
+                }
+                if(rRes.ok) state.reels = await rRes.json();
+                
+                console.log('Matrix datasets synchronized successfully.');
+            } catch (e) {
+                console.warn('Backend sync idle. Operating in local-only mode.', e);
+            }
+            nav('home');
+        }
+
+        // --- INIT ---
+        bootMatrix();
+    </script>
+</body>
+</html>
