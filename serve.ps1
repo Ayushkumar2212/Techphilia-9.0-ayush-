@@ -1,4 +1,4 @@
-$port = 8081
+$port = 8082
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$port/")
 $listener.Start()
@@ -9,7 +9,7 @@ try {
         $request = $context.Request
         $response = $context.Response
         
-        $path = $request.Url.LocalPath
+        $path = [System.Web.HttpUtility]::UrlDecode($request.Url.LocalPath)
         if ($path -eq "/") { $path = "/insta.html" }
         $filePath = Join-Path (Get-Location) $path.Replace('/', '\').TrimStart('\')
         
@@ -21,6 +21,7 @@ try {
                 ".js"   { "application/javascript" }
                 ".png"  { "image/png" }
                 ".jpg"  { "image/jpeg" }
+                ".json" { "application/json" }
                 default { "application/octet-stream" }
             }
             
@@ -30,7 +31,7 @@ try {
             $response.OutputStream.Write($content, 0, $content.Length)
         } else {
             $response.StatusCode = 404
-            $errorMsg = [System.Text.Encoding]::UTF8.GetBytes("404 - Not Found")
+            $errorMsg = [System.Text.Encoding]::UTF8.GetBytes("404 - Matrix File Not Found: $filePath")
             $response.OutputStream.Write($errorMsg, 0, $errorMsg.Length)
         }
         $response.Close()
