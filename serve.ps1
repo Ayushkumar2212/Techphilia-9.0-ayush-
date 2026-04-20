@@ -1,41 +1,47 @@
-$port = 8082
+$port = 8086
+$contentTypes = @{
+    ".html" = "text/html"
+    ".css" = "text/css"
+    ".js" = "application/javascript"
+    ".json" = "application/json"
+    ".png" = "image/png"
+    ".jpg" = "image/jpeg"
+}
+
 $listener = New-Object System.Net.HttpListener
+$listener.Prefixes.Add("http://127.0.0.1:$port/")
 $listener.Prefixes.Add("http://localhost:$port/")
-$listener.Start()
-Write-Host "Server started at http://localhost:$port/"
 try {
+    $listener.Start()
+    Write-Host "Server started at http://localhost:$port/"
     while ($listener.IsListening) {
         $context = $listener.GetContext()
         $request = $context.Request
         $response = $context.Response
         
-        $path = [System.Web.HttpUtility]::UrlDecode($request.Url.LocalPath)
+        $path = $request.Url.LocalPath
         if ($path -eq "/") { $path = "/insta.html" }
-        $filePath = Join-Path (Get-Location) $path.Replace('/', '\').TrimStart('\')
+        
+        # Simple manual decoding for spaces
+        $path = $path.Replace("%20", " ")
+        
+        $currentDir = (Get-Item .).FullName
+        $filePath = Join-Path $currentDir $path.TrimStart('/')
         
         if (Test-Path $filePath -PathType Leaf) {
-            $extension = [System.IO.Path]::GetExtension($filePath)
-            $contentType = switch ($extension) {
-                ".html" { "text/html" }
-                ".css"  { "text/css" }
-                ".js"   { "application/javascript" }
-                ".png"  { "image/png" }
-                ".jpg"  { "image/jpeg" }
-                ".json" { "application/json" }
-                default { "application/octet-stream" }
-            }
-            
-            $content = [System.IO.File]::ReadAllBytes($filePath)
-            $response.ContentType = $contentType
-            $response.ContentLength64 = $content.Length
-            $response.OutputStream.Write($content, 0, $content.Length)
+            $bytes = [System.IO.File]::ReadAllBytes($filePath)
+            $ext = [System.IO.Path]::GetExtension($filePath)
+            $response.ContentType = if ($contentTypes.ContainsKey($ext)) { $contentTypes[$ext] } else { "application/octet-stream" }
+            $response.ContentLength64 = $bytes.Length
+            $response.OutputStream.Write($bytes, 0, $bytes.Length)
         } else {
             $response.StatusCode = 404
-            $errorMsg = [System.Text.Encoding]::UTF8.GetBytes("404 - Matrix File Not Found: $filePath")
-            $response.OutputStream.Write($errorMsg, 0, $errorMsg.Length)
+            Write-Host "404: $filePath"
         }
         $response.Close()
     }
+} catch {
+    Write-Host "Error: $_"
 } finally {
     $listener.Stop()
 }
