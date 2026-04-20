@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <title>Insta-AI | Portal</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+
+        :root {
+            --ai-blue: #3b82f6;
+            --ai-purple: #a855f7;
+            --ai-pink: #ec4899;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+
+        /* 1. DYNAMIC NEURAL BACKGROUND */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        }
+
+        /* 2. GRADIENT TEXT & ANIMATIONS */
+        .gradient-text {
+            background: linear-gradient(90deg, var(--ai-blue), var(--ai-purple), var(--ai-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            to { background-position: 200% center; }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+
+        .form-active {
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        input:focus {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+            border-color: var(--ai-blue);
+            transform: scale(1.02);
+        }
+
+        .glow-button {
+            position: relative;
+            z-index: 1;
+            overflow: hidden;
+            transition: all 0.4s;
+        }
+        .glow-button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            opacity: 0;
+            transition: 0.4s;
+        }
+        .glow-button:hover::after {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .hidden { display: none; }
+
+        /* Neural Connectivity Simulation */
+        .node-line {
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-width: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-white">
+
+    <canvas id="canvas-bg"></canvas>
+
+    <div class="max-w-4xl w-full grid md:grid-cols-2 glass rounded-[3rem] overflow-hidden relative z-10">
+        
+        <!-- LEFT PANEL: AESTHETICS -->
+        <div class="hidden md:flex flex-col justify-center p-16 bg-black/40 border-r border-white/5 relative overflow-hidden group">
+            <div class="absolute top-10 right-10 text-blue-400 opacity-20 animate-float">
+                <i data-lucide="brain-circuit" size="120" stroke-width="1"></i>
+            </div>
+            <div class="absolute bottom-20 left-10 text-purple-400 opacity-10 animate-float" style="animation-delay: -2s">
+                <i data-lucide="zap" size="80" stroke-width="1"></i>
+            </div>
+            
+            <div class="relative z-10">
+                <h1 class="text-7xl font-black mb-6 tracking-tighter italic">Insta-<span class="gradient-text">AI</span></h1>
+                <p class="text-gray-400 text-xl leading-relaxed mb-10 max-w-sm">
+                    Step into the matrix where connections are neural and the experience is infinite.
+                </p>
+                <div class="flex gap-3">
+                    <div class="h-1.5 w-24 bg-blue-500 rounded-full"></div>
+                    <div class="h-1.5 w-12 bg-purple-500 rounded-full opacity-60"></div>
+                </div>
+            </div>
+
+            <!-- Stats overlay -->
+            <div class="mt-16 grid grid-cols-2 gap-8 opacity-40 group-hover:opacity-80 transition-opacity">
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-blue-400 mb-1">Neural Nodes</p>
+                    <p class="text-2xl font-black">1.2M+</p>
+                </div>
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-widest text-purple-400 mb-1">Total Logic</p>
+                    <p class="text-2xl font-black">∞ Sync</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: FORMS -->
+        <div class="p-10 md:p-16 relative flex items-center bg-black/20">
+            
+            <!-- Login Form -->
+            <div id="loginForm" class="w-full form-active">
+                <h2 class="text-5xl font-black mb-2 tracking-tight">Access</h2>
+                <p class="text-gray-400 text-lg mb-12">Initialize your neural credentials.</p>
+
+                <form class="space-y-6">
+                    <div class="group relative">
+                        <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors"></i>
+                        <input type="email" placeholder="AI-ID / Email" class="w-full pl-14 pr-6 py-5 rounded-[1.5rem] bg-white/5 border border-white/10 focus:outline-none transition-all text-lg">
+                    </div>
+                    <div class="group relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-purple-400 transition-colors"></i>
+                        <input type="password" placeholder="Matrix Key" class="w-full pl-14 pr-6 py-5 rounded-[1.5rem] bg-white/5 border border-white/10 focus:outline-none transition-all text-lg">
+                    </div>
+                    
+                    <button class="w-full py-5 rounded-[1.5rem] bg-gradient-to-r from-blue-600 to-purple-600 font-black text-xl hover:shadow-[0_0_40px_rgba(37,99,235,0.4)] transition-all glow-button uppercase tracking-widest">
+                        Enter Neural Link
+                    </button>
+                </form>
+
+                <div class="mt-12 text-center pt-8 border-t border-white/5">
+                    <p class="text-gray-500 text-sm mb-4 italic">No neural signature found?</p>
+                    <button onclick="toggleForms('signup')" class="text-blue-400 font-black text-sm uppercase tracking-widest hover:text-white transition-all underline underline-offset-8">Create New Entity →</button>
+                </div>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signupForm" class="w-full hidden">
+                <h2 class="text-4xl font-black mb-2 tracking-tight">Initialize</h2>
+                <p class="text-gray-400 mb- aggregation">Register your entity in the stream.</p>
+
+                <form class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <input type="text" placeholder="First Name" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500">
+                        <input type="text" placeholder="Last Name" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500">
+                    </div>
+                    <input type="email" placeholder="Neural ID (Email)" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500">
+                    <input type="password" placeholder="Set Matrix Key" class="w-full px-5 py-4 rounded-2xl bg-white/5 border border-white/10 focus:outline-none focus:border-purple-500">
+                    
+                    <button class="w-full py-5 rounded-2xl bg-white text-black font-black text-xl hover:shadow-white/20 hover:shadow-xl transition-all glow-button mt-6 uppercase tracking-widest">
+                        Register Entity
+                    </button>
+                </form>
+
+                <div class="mt-12 text-center pt-8 border-t border-white/5">
+                    <button onclick="toggleForms('login')" class="text-purple-400 font-black text-sm uppercase tracking-widest hover:text-white transition-all">← Back to Access Control</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- UI Overlay for context -->
+    <div class="fixed bottom-10 left-10 text-[10px] text-gray-600 uppercase tracking-[0.5em] font-bold z-20">
+        System Status: Optimal | Connection: Neural
+    </div>
+
+    <script>
+        // Init Icons
+        lucide.createIcons();
+
+        // Canvas Neural Network Animation
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = [];
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    vx: (Math.random() - 0.5) * 0.5,
+                    vy: (Math.random() - 0.5) * 0.5,
+                    size: Math.random() * 2
+                });
+            }
+        }
+
+        function drawContents() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
+            
+            particles.forEach((p, i) => {
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw lines
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 150) {
+                        ctx.strokeStyle = `rgba(168, 85, 247, ${0.15 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(drawContents);
+        }
+
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+        drawContents();
+
+        // Flow Management
+        function toggleForms(target) {
+            const login = document.getElementById('loginForm');
+            const signup = document.getElementById('signupForm');
+            login.classList.remove('form-active');
+            signup.classList.remove('form-active');
+
+            if (target === 'signup') {
+                login.classList.add('hidden');
+                signup.classList.remove('hidden');
+                setTimeout(() => signup.classList.add('form-active'), 10);
+            } else {
+                signup.classList.add('hidden');
+                login.classList.remove('hidden');
+                setTimeout(() => login.classList.add('form-active'), 10);
+            }
+        }
+
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('button');
+                btn.innerHTML = `<span class="flex items-center justify-center gap-4"><i data-lucide="loader-2" class="animate-spin"></i> SYNCING...</span>`;
+                lucide.createIcons();
+                btn.style.opacity = "0.7";
+                btn.style.pointerEvents = "none";
+                
+                setTimeout(() => {
+                    window.location.href = "insta 2.html";
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>
