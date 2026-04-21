@@ -1,0 +1,36 @@
+{
+  "users": [
+    {
+      "handle": "ayush_ai",
+      "name": "Ayush Kumar",
+      "bio": "Neural Architect | Building the decentralized future",
+      "avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=Ayush",
+      "followers": 1250000,
+      "following": 450,
+      "posts": []
+    },
+    {
+      "handle": "viru100",
+      "name": "Viru Node 1",
+      "avatar": "https://i.pravatar.cc/150?u=viru100",
+      "bio": "Injected Matrix Unit | Verified",
+      "followers": 240500,
+      "following": 120,
+      "posts": []
+    }
+  ],
+  "posts": [
+    {
+      "id": "glob_0",
+      "handle": "viru100",
+      "url": "https://picsum.photos/800/1000?random=50",
+      "caption": "Synced with node viru100 at 120Gbps.",
+      "likes": 420,
+      "comments": []
+    }
+  ],
+  "system": {
+    "version": "v4.2",
+    "last_global_sync": "2026-04-21T16:04:00Z"
+  }
+}
