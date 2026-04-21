@@ -1,4 +1,4 @@
-$port = 8086
+$port = 5555
 $contentTypes = @{
     ".html" = "text/html"
     ".css" = "text/css"
@@ -20,7 +20,7 @@ try {
         $response = $context.Response
         
         $path = $request.Url.LocalPath
-        if ($path -eq "/") { $path = "/insta.html" }
+        if ($path -eq "/") { $path = "/index.html" }
         
         # Simple manual decoding for spaces
         $path = $path.Replace("%20", " ")
